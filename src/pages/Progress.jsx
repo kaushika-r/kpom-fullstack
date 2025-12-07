@@ -1,16 +1,104 @@
+// client/src/pages/Progress.jsx
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  CartesianGrid,
+} from "recharts";
+
+// ---- format helpers ----
+function minutesToHours(minutes) {
+  return (minutes / 60).toFixed(1);
+}
+
+function minutesToReadable(minutes) {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  if (h > 0 && m > 0) return `${h}h ${m}m`;
+  if (h > 0) return `${h}h`;
+  return `${m}m`;
+}
+
+function formatDateLabel(dateStr) {
+  const d = new Date(dateStr);
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  return `${dd}-${mm}`;
+}
+
+function formatYearLabel(period) {
+  const [y, m] = period.split("-");
+  const monthNames = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+  return `${monthNames[Number(m) - 1]}-${y}`;
+}
 
 export default function Progress() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [streak, setStreak] = useState(0);
-  const [totalMinutes, setTotalMinutes] = useState(0);
-  const [history, setHistory] = useState([]);
+  const [todayMinutes, setTodayMinutes] = useState(0);
+  const [weekHistory, setWeekHistory] = useState([]);
+  const [monthHistory, setMonthHistory] = useState([]);
+  const [yearHistory, setYearHistory] = useState([]);
   const [error, setError] = useState("");
+  const [view, setView] = useState("week");
+
+  // NEW toggle state
+  const [showAverage, setShowAverage] = useState(true);
 
   const token = localStorage.getItem("token");
 
+  // ---- weekly total & average ----
+  const weekTotalMinutes = weekHistory.reduce(
+    (sum, d) => sum + Number(d.totalMinutes || 0),
+    0
+  );
+
+  const weekAverageHours = (() => {
+    if (!weekHistory || weekHistory.length === 0) return 0;
+    const avgMinutes = weekTotalMinutes / weekHistory.length;
+    return Number((avgMinutes / 60).toFixed(1));
+  })();
+
+  // ---- graph data generator ----
+  function getGraphData() {
+    if (view === "week") {
+      return weekHistory.map((d) => ({
+        label: formatDateLabel(d.day),
+        hours: Number(minutesToHours(d.totalMinutes)),
+      }));
+    }
+    if (view === "month") {
+      return monthHistory.map((d) => ({
+        label: formatDateLabel(d.day),
+        hours: Number(minutesToHours(d.totalMinutes)),
+      }));
+    }
+    return yearHistory.map((d) => ({
+      label: formatYearLabel(d.period),
+      hours: Number(minutesToHours(d.totalMinutes)),
+    }));
+  }
+
+  // ---- fetch summary ----
   async function fetchSummary() {
     if (!token) {
       navigate("/login");
@@ -22,18 +110,14 @@ export default function Progress() {
 
     try {
       const res = await fetch("http://localhost:5000/api/progress/summary", {
-        headers: {
-          Authorization: "Bearer " + token,
-        },
+        headers: { Authorization: "Bearer " + token },
       });
 
       const data = await res.json().catch(() => ({}));
 
-      console.log("SUMMARY response:", res.status, data); // debug
-
       if (res.status === 401) {
-        // ❌ invalid or expired token → logout + redirect
         localStorage.removeItem("token");
+        localStorage.removeItem("user");
         navigate("/login");
         return;
       }
@@ -44,9 +128,11 @@ export default function Progress() {
         return;
       }
 
-      setStreak(data.streak);
-      setTotalMinutes(data.totalMinutes);
-      setHistory(data.history || []);
+      setStreak(data.streak || 0);
+      setTodayMinutes(data.todayMinutes || 0);
+      setWeekHistory(data.weekHistory || []);
+      setMonthHistory(data.monthHistory || []);
+      setYearHistory(data.yearHistory || []);
     } catch (err) {
       setError("Network error: " + err.message);
     } finally {
@@ -54,117 +140,171 @@ export default function Progress() {
     }
   }
 
-  async function addTestSession() {
-    if (!token) {
-      navigate("/login");
-      return;
-    }
-
-    try {
-      const res = await fetch("http://localhost:5000/api/progress/session", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + token,
-        },
-        body: JSON.stringify({
-          methodId: "pomodoro",
-          focusMinutes: 25,
-        }),
-      });
-
-      const data = await res.json().catch(() => ({}));
-
-      if (res.status === 401) {
-        localStorage.removeItem("token");
-        navigate("/login");
-        return;
-      }
-
-      if (!res.ok) {
-        alert(data.message || "Failed to save session");
-        return;
-      }
-
-      await fetchSummary();
-    } catch (err) {
-      alert("Network error: " + err.message);
-    }
-  }
-
   useEffect(() => {
     fetchSummary();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line
   }, []);
 
-  if (!token) {
-    return null; // route guard + useEffect will handle redirect
-  }
+  if (!token) return null;
+
+  const graphData = getGraphData();
+  const userJson = localStorage.getItem("user");
+  const user = userJson ? JSON.parse(userJson) : null;
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-4">Your Progress</h1>
+      <h1 className="text-2xl font-bold mb-4">
+        Your Progress{user ? `, ${user.name}` : ""}
+      </h1>
 
       {loading && <p>Loading your stats...</p>}
       {error && <p className="text-sm text-red-600 mb-4">{error}</p>}
 
       {!loading && !error && (
         <>
+          {/* Summary cards */}
           <div className="grid gap-4 md:grid-cols-3 mb-6">
-            <div className="border rounded-xl p-4">
+            {/* --- Streak card --- */}
+            <div className="border rounded-xl p-4 kp-card">
               <p className="text-sm text-gray-500 mb-1">Current streak</p>
-              <p className="text-3xl font-bold">{streak}🔥</p>
+              <p className="text-3xl font-bold">
+                {streak}
+                <span className="ml-1">🔥</span>
+              </p>
               <p className="text-xs text-gray-500 mt-1">
                 Consecutive days you studied
               </p>
             </div>
 
-            <div className="border rounded-xl p-4">
-              <p className="text-sm text-gray-500 mb-1">Total focus time</p>
+            {/* --- Today card --- */}
+            <div className="border rounded-xl p-4 bg-white">
+              <p className="text-sm text-gray-500 mb-1">Today&apos;s study</p>
               <p className="text-3xl font-bold">
-                {totalMinutes}
-                <span className="text-base ml-1">min</span>
+                {minutesToHours(todayMinutes)}
+                <span className="text-base ml-1">h</span>
               </p>
               <p className="text-xs text-gray-500 mt-1">
-                Lifetime minutes across all sessions
+                Total hours studied today
               </p>
             </div>
 
-            <div className="border rounded-xl p-4">
-              <p className="text-sm text-gray-500 mb-1">Days with study</p>
-              <p className="text-3xl font-bold">{history.length}</p>
+            {/* --- Weekly card with toggle --- */}
+            <div className="border rounded-xl p-4 bg-white">
+              <p className="text-sm text-gray-500 mb-1">Weekly Stats</p>
+
+              <div className="flex gap-2 mb-2">
+                <button
+                  onClick={() => setShowAverage(true)}
+                  className={`px-3 py-1 rounded-full border text-xs ${
+                    showAverage ? "bg-black text-white" : "bg-white text-gray-700"
+                  }`}
+                >
+                  Average / day
+                </button>
+
+                <button
+                  onClick={() => setShowAverage(false)}
+                  className={`px-3 py-1 rounded-full border text-xs ${
+                    !showAverage ? "bg-black text-white" : "bg-white text-gray-700"
+                  }`}
+                >
+                  Total week
+                </button>
+              </div>
+
+              {showAverage ? (
+                <p className="text-3xl font-bold">
+                  {weekAverageHours.toFixed(1)}
+                  <span className="text-base ml-1">h</span>
+                </p>
+              ) : (
+                <p className="text-3xl font-bold">
+                  {minutesToReadable(weekTotalMinutes)}
+                </p>
+              )}
+
               <p className="text-xs text-gray-500 mt-1">
-                In the last 14 days
+                {showAverage
+                  ? "Average hours per day"
+                  : "Total hours this week"}
               </p>
             </div>
           </div>
 
-          <div className="border rounded-xl p-4 mb-4">
-            <p className="font-semibold mb-2">Recent days</p>
-            {history.length === 0 && (
+          {/* Graph */}
+          <div className="border rounded-xl p-4 kp-card">
+            <div className="flex items-center justify-between mb-3">
+              <p className="font-semibold">
+                Study hours (
+                {view === "week"
+                  ? "last 7 days"
+                  : view === "month"
+                  ? "last 30 days"
+                  : "last 12 months"}
+                )
+              </p>
+
+              <div className="flex gap-2 text-xs">
+                <button
+                  onClick={() => setView("week")}
+                  className={`px-3 py-1 rounded-full border ${
+                    view === "week" ? "bg-black text-white" : "bg-white text-gray-700"
+                  }`}
+                >
+                  Week
+                </button>
+                <button
+                  onClick={() => setView("month")}
+                  className={`px-3 py-1 rounded-full border ${
+                    view === "month" ? "bg-black text-white" : "bg-white text-gray-700"
+                  }`}
+                >
+                  Month
+                </button>
+                <button
+                  onClick={() => setView("year")}
+                  className={`px-3 py-1 rounded-full border ${
+                    view === "year" ? "bg-black text-white" : "bg-white text-gray-700"
+                  }`}
+                >
+                  Year
+                </button>
+              </div>
+            </div>
+
+            {graphData.length === 0 ? (
               <p className="text-sm text-gray-500">
-                No sessions yet. Add one to see your progress.
+                No sessions yet. Use your timers to start building data.
               </p>
-            )}
-
-            {history.length > 0 && (
-              <ul className="text-sm space-y-1">
-                {history.map((h) => (
-                  <li key={h.day} className="flex justify-between">
-                    <span>{h.day}</span>
-                    <span>{h.totalMinutes} min</span>
-                  </li>
-                ))}
-              </ul>
+            ) : (
+              <div className="w-full h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={graphData} margin={{ left: -10 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                    <XAxis dataKey="label" tick={{ fontSize: 10 }} />
+                    <YAxis
+                      tick={{ fontSize: 10 }}
+                      label={{
+                        value: "Hours",
+                        angle: -90,
+                        position: "insideLeft",
+                        offset: 10,
+                        fontSize: 10,
+                      }}
+                    />
+                    <Tooltip formatter={(v) => `${v} h`} />
+                    <Line
+                      type="monotone"
+                      dataKey="hours"
+                      stroke="#000"
+                      strokeWidth={2}
+                      dot={{ r: 3 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
             )}
           </div>
-
-          <button
-            onClick={addTestSession}
-            className="px-4 py-2 rounded-lg bg-black text-white text-sm"
-          >
-            + Add test Pomodoro session (25 min)
-          </button>
         </>
       )}
     </div>

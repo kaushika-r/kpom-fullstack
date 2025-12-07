@@ -29,7 +29,7 @@ export default function Signup() {
   }
 
   return (
-    <div className="max-w-md mx-auto border rounded-xl shadow-sm p-6">
+    <div className="max-w-md mx-auto border rounded-xl shadow-sm p-6 kp-card">
       <h1 className="text-2xl font-bold mb-4">Create account</h1>
 
       <form onSubmit={handleSubmit} className="space-y-3">
@@ -53,7 +53,7 @@ export default function Signup() {
           onChange={(e) => setPassword(e.target.value)}
         />
         <button
-          className="w-full bg-black text-white py-2 rounded-md disabled:opacity-70"
+          className="w-full btn-accent py-2 rounded-md disabled:opacity-70"
           disabled={loading}
         >
           {loading ? "Signing up..." : "Sign up"}

@@ -1,3 +1,263 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Make root fill the screen */
+html,
+body,
+#root {
+  height: 100%;
+}
+
+/* ===== Kpom theming: variables per theme ===== */
+
+:root,
+[data-theme="default"] {
+  --kp-page-bg: #f3f4f6;
+  --kp-nav-bg: #ffffff;
+  --kp-card-bg: #ffffff;
+  --kp-text-main: #111827;
+  --kp-text-muted: #6b7280;
+  --kp-accent: #111827;
+}
+
+/* Pastel / soft */
+
+[data-theme="barbie"] {
+  --kp-page-bg: #f7bece;
+  --kp-nav-bg: #ffffff;
+  --kp-card-bg: #f8c3e0;
+  --kp-text-main: #4a044e;
+  --kp-text-muted: #a85596;
+  --kp-accent: #ec4899;
+}
+
+[data-theme="mint"] {
+  --kp-page-bg: #ccf1dc;
+  --kp-nav-bg: #ffffff;
+  --kp-card-bg: #b7efcb;
+  --kp-text-main: #064e3b;
+  --kp-text-muted: #4b635a;
+  --kp-accent: #16a34a;
+}
+
+[data-theme="lavender"] {
+  --kp-page-bg: #e3ddff;
+  --kp-nav-bg: #ffffff;
+  --kp-card-bg: #d3cafa;
+  --kp-text-main: #312e81;
+  --kp-text-muted: #4b5563;
+  --kp-accent: #8b5cf6;
+}
+
+/* High contrast / bold */
+
+[data-theme="spidey"] {
+  --kp-page-bg: #020617;
+  --kp-nav-bg: #cb2b2b;
+  --kp-card-bg: #111827;
+  --kp-text-main: #ffbbbb;
+  --kp-text-muted: #aeaeb1;
+  --kp-accent: #cb2b2b;
+}
+
+[data-theme="invincible"] {
+  --kp-page-bg: #020617;
+  --kp-nav-bg: #010c25;
+  --kp-card-bg: #0f172a;
+  --kp-text-main: #facc15;
+  --kp-text-muted: #9ca3af;
+  --kp-accent: #facc15;
+}
+
+/* Other combos */
+
+[data-theme="peach"] {
+  --kp-page-bg: #fbe3c7;
+  --kp-nav-bg: #f7e9d8;
+  --kp-card-bg: #ffedd5;
+  --kp-text-main: #7c2d12;
+  --kp-text-muted: #6b7280;
+  --kp-accent: #fb923c;
+}
+
+/* 🌊 OCEAN — updated for darker text */
+[data-theme="ocean"] {
+  --kp-page-bg: #e0f2fe;
+  --kp-nav-bg: #0b1120;
+  --kp-card-bg: #0f172a;
+  --kp-text-main: #436086;
+  --kp-text-muted: #4077cf;
+  --kp-accent: #0ea5e9;
+}
+
+[data-theme="ocean"] h1,
+[data-theme="ocean"] h2,
+[data-theme="ocean"] h3,
+[data-theme="ocean"] p,
+[data-theme="ocean"] span,
+[data-theme="ocean"] a,
+[data-theme="ocean"] header nav a {
+  color: var(--kp-text-main) !important;
+}
+
+/* 🌲 FOREST — updated for darker text */
+[data-theme="forest"] {
+  --kp-page-bg: #ecfdf3;
+  --kp-nav-bg: #052e16;
+  --kp-card-bg: #064e3b;
+  --kp-text-main: #5f9f84;
+  --kp-text-muted: #18ec9a;
+  --kp-accent: #16a34a;
+}
+
+[data-theme="forest"] h1,
+[data-theme="forest"] h2,
+[data-theme="forest"] h3,
+[data-theme="forest"] p,
+[data-theme="forest"] span,
+[data-theme="forest"] a,
+[data-theme="forest"] header nav a {
+  color: var(--kp-text-main) !important;
+}
+
+/* Dark minimal */
+[data-theme="noir"] {
+  --kp-page-bg: #020617;
+  --kp-nav-bg: #0849d6;
+  --kp-card-bg: #020617;
+  --kp-text-main: #73f303;
+  --kp-text-muted: #9ca3af;
+  --kp-accent: #0849d6;
+}
+
+/* ===== Apply theme variables ===== */
+
+body {
+  margin: 0;
+  background-color: var(--kp-page-bg);
+  color: var(--kp-text-main);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+/* Page + nav backgrounds */
+.bg-page {
+  background-color: var(--kp-page-bg);
+}
+
+.bg-nav {
+  background-color: var(--kp-nav-bg);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* Card styling */
+.kp-card {
+  background-color: var(--kp-card-bg);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+/* Text helpers */
+.text-main {
+  color: var(--kp-text-main);
+}
+
+.text-muted {
+  color: var(--kp-text-muted);
+}
+
+/* Accent buttons / borders */
+.btn-accent {
+  background-color: var(--kp-accent);
+  color: #ffffff;
+  font-weight: 500;
+}
+
+.btn-accent:hover {
+  filter: brightness(1.07);
+}
+
+.btn-accent-outline {
+  border-color: var(--kp-accent);
+  color: var(--kp-accent);
+}
+
+.border-accent {
+  border-color: var(--kp-accent);
+}
+
+/* Navbar link text uses main colour */
+header nav a {
+  color: var(--kp-text-main);
+}
+
+/* Make gray utility text readable on dark-ish themes */
+[data-theme="spidey"] .text-gray-500,
+[data-theme="spidey"] .text-gray-400,
+[data-theme="invincible"] .text-gray-500,
+[data-theme="invincible"] .text-gray-400,
+[data-theme="ocean"] .text-gray-500,
+[data-theme="ocean"] .text-gray-400,
+[data-theme="forest"] .text-gray-500,
+[data-theme="forest"] .text-gray-400,
+[data-theme="noir"] .text-gray-500,
+[data-theme="noir"] .text-gray-400 {
+  color: var(--kp-text-muted);
+}
+
+/* Improve light theme contrast */
+[data-theme="mint"],
+[data-theme="barbie"],
+[data-theme="lavender"],
+[data-theme="peach"],
+[data-theme="default"] {
+  --kp-text-main: #0a0a0a;
+  --kp-text-muted: #404040;
+}
+
+/* Navbar links on light themes */
+[data-theme="mint"] header nav a,
+[data-theme="barbie"] header nav a,
+[data-theme="lavender"] header nav a,
+[data-theme="peach"] header nav a,
+[data-theme="default"] header nav a {
+  color: #0a0a0a !important;
+}
+
+/* Navbar brand */
+[data-theme="mint"] header nav .font-bold,
+[data-theme="barbie"] header nav .font-bold,
+[data-theme="lavender"] header nav .font-bold,
+[data-theme="peach"] header nav .font-bold,
+[data-theme="default"] header nav .font-bold {
+  color: #0a0a0a !important;
+}
+
+/* Headings */
+[data-theme="mint"] h1,
+[data-theme="mint"] h2,
+[data-theme="mint"] h3,
+[data-theme="barbie"] h1,
+[data-theme="barbie"] h2,
+[data-theme="barbie"] h3,
+[data-theme="lavender"] h1,
+[data-theme="lavender"] h2,
+[data-theme="lavender"] h3,
+[data-theme="peach"] h1,
+[data-theme="peach"] h2,
+[data-theme="peach"] h3,
+[data-theme="default"] h1,
+[data-theme="default"] h2,
+[data-theme="default"] h3 {
+  color: #0a0a0a;
+}
+
+/* Intro / description text */
+[data-theme="mint"] p,
+[data-theme="barbie"] p,
+[data-theme="lavender"] p,
+[data-theme="peach"] p,
+[data-theme="default"] p {
+  color: #2a2a2a;
+}
