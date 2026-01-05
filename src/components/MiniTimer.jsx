@@ -27,7 +27,7 @@ export default function MiniTimer() {
     const rect = cardRef.current?.getBoundingClientRect();
     if (!rect) return;
 
-    const SAFE_MARGIN = 200; // 👈 only change
+    const SAFE_MARGIN = 199; // 👈 only change
 
     setPos({
       x: window.innerWidth - rect.width - SAFE_MARGIN,
