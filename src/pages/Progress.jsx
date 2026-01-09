@@ -109,7 +109,7 @@ export default function Progress() {
     setError("");
 
     try {
-      const res = await fetch("http://localhost:5000/api/progress/summary", {
+      const res = await fetch("fetch(`${import.meta.env.VITE_API_URL}/api/progress/summary`)", {
         headers: { Authorization: "Bearer " + token },
       });
 

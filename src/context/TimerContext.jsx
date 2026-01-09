@@ -47,7 +47,7 @@ export function TimerProvider({ children }) {
     if (!token) return;
 
     try {
-      const res = await fetch("http://localhost:5000/api/progress/session", {
+      const res = await fetch("fetch(`${import.meta.env.VITE_API_URL}/api/progress/session`)", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
